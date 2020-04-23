@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.vega.springit.domain.Comment;
 import com.vega.springit.domain.Link;
+import com.vega.springit.repository.CommentRepository;
 import com.vega.springit.repository.LinkRepository;
 
 @Controller
@@ -25,12 +27,14 @@ public class LinkController {
 
 	private static final Logger logger = LoggerFactory.getLogger(LinkController.class);
 	private LinkRepository linkRepository;
+	private CommentRepository commentRepository;
 	
-	public LinkController(LinkRepository linkRepository) {
+	public LinkController(LinkRepository linkRepository, CommentRepository commentRepository) {
 		this.linkRepository = linkRepository;
+		this.commentRepository = commentRepository;
 	}
-	
-	
+
+
 	//List
 	
 //	@GetMapping("/")
@@ -55,17 +59,19 @@ public class LinkController {
 	}
 	
 	@GetMapping("/link/{id}")
-	private String read(@PathVariable Long id, Model model) {
-		 Optional<Link> link = linkRepository.findById(id);
-		 
-		 if(link.isPresent()) {
-			 model.addAttribute("link", link.get());
-			 model.addAttribute("success", model.containsAttribute("success"));
-			 return "link/view";
-		 }
-		 else{
-			 return "redirect:/";
-		 }
+	public String read(@PathVariable Long id,Model model) {
+	    Optional<Link> link = linkRepository.findById(id);
+	    if( link.isPresent() ) {
+	        Link currentLink = link.get();
+	        Comment comment = new Comment();
+	        comment.setLink(currentLink);
+	        model.addAttribute("comment",comment);
+	        model.addAttribute("link",currentLink);
+	        model.addAttribute("success", model.containsAttribute("success"));
+	        return "link/view";
+	    } else {
+	        return "redirect:/";
+	    }
 	}
 	
 	@PutMapping("/{id}")
@@ -100,5 +106,16 @@ public class LinkController {
     		
     		return "redirect:/link/{id}";
     	}
+    }
+    
+    @PostMapping("/link/comments")
+    public String addComment(@Valid Comment comment, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+        if( bindingResult.hasErrors() ) {
+            logger.info("Something went wrong.");
+        } else {
+            logger.info("New Comment Saved!");
+            commentRepository.save(comment);
+        }
+        return "redirect:/link/" + comment.getLink().getId();
     }
 }

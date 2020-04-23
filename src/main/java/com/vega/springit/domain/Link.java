@@ -29,7 +29,6 @@ import lombok.ToString;
 @Entity
 @RequiredArgsConstructor
 @Getter @Setter
-@ToString
 @NoArgsConstructor
 public class Link extends Auditable{
 	@Id	@GeneratedValue()
