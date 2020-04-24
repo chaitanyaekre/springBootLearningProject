@@ -21,20 +21,16 @@ import com.vega.springit.domain.Comment;
 import com.vega.springit.domain.Link;
 import com.vega.springit.repository.CommentRepository;
 import com.vega.springit.repository.LinkRepository;
+import com.vega.springit.service.CommentService;
+import com.vega.springit.service.LinkService;
 
 @Controller
 public class LinkController {
 
 	private static final Logger logger = LoggerFactory.getLogger(LinkController.class);
-	private LinkRepository linkRepository;
-	private CommentRepository commentRepository;
+	private LinkService linkService;
+	private CommentService commentService;
 	
-	public LinkController(LinkRepository linkRepository, CommentRepository commentRepository) {
-		this.linkRepository = linkRepository;
-		this.commentRepository = commentRepository;
-	}
-
-
 	//List
 	
 //	@GetMapping("/")
@@ -42,11 +38,17 @@ public class LinkController {
 //		return linkRepository.findAll();
 //	}
 	
+	public LinkController(LinkService linkService, CommentService commentService) {
+		this.linkService = linkService;
+		this.commentService = commentService;
+	}
+
+
 	@GetMapping("/")
 	public String list(Model model) {
 		
-		System.out.println(linkRepository.findAll().size());
-		model.addAttribute("links", linkRepository.findAll());
+		System.out.println(linkService.findAll().size());
+		model.addAttribute("links", linkService.findAll());
 		return "link/list";
 	}
 	
@@ -55,12 +57,12 @@ public class LinkController {
 	
 	@PostMapping("/create")
 	private Link create(@ModelAttribute Link link) {
-		return linkRepository.save(link);
+		return linkService.save(link);
 	}
 	
 	@GetMapping("/link/{id}")
 	public String read(@PathVariable Long id,Model model) {
-	    Optional<Link> link = linkRepository.findById(id);
+	    Optional<Link> link = linkService.findById(id);
 	    if( link.isPresent() ) {
 	        Link currentLink = link.get();
 	        Comment comment = new Comment();
@@ -81,7 +83,7 @@ public class LinkController {
 	
 	@DeleteMapping("/{id}")
 	private void delete(@PathVariable Long id) {
-		linkRepository.deleteById(id);
+		linkService.deleteById(id);
 	}
 	
 	@GetMapping("/link/submit")
@@ -99,7 +101,7 @@ public class LinkController {
     		return "link/submit";
     	}else {
     		
-    		linkRepository.save(link);
+    		linkService.save(link);
     		logger.info("Link saved successfully.");
     		redirectAttributes.addAttribute("id",link.getId())
     		.addFlashAttribute("success", true);
@@ -114,7 +116,7 @@ public class LinkController {
             logger.info("Something went wrong.");
         } else {
             logger.info("New Comment Saved!");
-            commentRepository.save(comment);
+            commentService.save(comment);
         }
         return "redirect:/link/" + comment.getLink().getId();
     }
